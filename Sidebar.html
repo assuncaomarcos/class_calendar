@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <base target="_top">
+    <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/themes/blitzer/jquery-ui.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
+    <?!= include('SidebarCss'); ?>
+    <title>Paramètres du calendrier</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+    <?!= include('MultiDatesPicker'); ?>
+</head>
+<body>
+<form id="form_calendar" class="sidebar branding-below">
+    <fieldset>
+        <label for="semester">Session : </label>
+        <select id="semester" name="semester">
+            <option value="W">Hiver</option>
+            <option value="S">Été</option>
+            <option value="F">Automne</option>
+        </select>
+        <label for="year">Année : </label>
+        <input id="year" name="year" type="number" min="2024" pattern="\d{4}" required placeholder="YYYY"/>
+        <label for="classes">Dates des cours :</label>
+        <input id="classes" name="classes" required />
+        <label for="labs">Dates des laboratoires :</label>
+        <input id="labs" name="labs" required/>
+        <label for="quizzes">Dates des quiz :</label>
+        <input id="quizzes" name="quizzes" required/>
+        <label for="exams">Dates des examens :</label>
+        <input id="exams" name="exams" required/>
+        <label for="holidays">Dates des congés fériés :</label>
+        <input id="holidays" name="holidays" required/>
+        <button class="blue" id="create-calendar">Créer le calendrier</button>
+    </fieldset>
+</form>
+<h5 class="error" id="error"></h5>
+<div class="sidebar bottom">
+    <img alt="Add-on logo" class="logo"
+         src="https://cdn.glitch.global/95f7b0bc-6724-4dad-a0f3-bb3f9368cefe/favicon.ico?v=1704678786327"
+         width="27" height="27">
+    <span class="gray branding-text"><small>École de technologie supérieure</small></span>
+</div>
+
+<script>
+    const semesters = {
+        "W" : [0, 3],
+        "S" : [4, 7],
+        "F" : [8, 11]
+    }
+
+    const pickerOptions = {
+        dateFormat: "yy-mm-dd",
+        dayNames: [ "Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi" ],
+        dayNamesMin: [ "Di", "Lu", "Ma", "Me", "Je", "Ve", "Sa" ],
+        monthNames: ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+            "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"],
+        monthNamesShort: ["Jan", "Fév", "Mar", "Avr", "Mai", "Jui", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"]
+    }
+
+    $(function () {
+        $('#create-calendar').click(runCreateCalendar);
+        $('#classes').multiDatesPicker({ maxPicks: 12, ...pickerOptions});
+        $('#labs').multiDatesPicker({ maxPicks: 12, ...pickerOptions});
+        $('#quizzes').multiDatesPicker({ ...pickerOptions});
+        $('#holidays').multiDatesPicker({ ...pickerOptions});
+        $('#exams').multiDatesPicker({ ...pickerOptions});
+
+        const now = new Date();
+        $('#year').val(now.getFullYear());
+        const semesterCode = getSemesterCode(now.getMonth());
+        const semester = $('#semester');
+        semester.val(semesterCode);
+        semester.change(configDatesPickers);
+        configDatesPickers();
+    });
+
+    /**
+     * Returns the semester code given the month provided
+     * @param month the month from 0 to 11
+     * @returns {string} the semester code
+     */
+    function getSemesterCode(month) {
+        return Object.keys(semesters).find(s => month >= semesters[s][0] && month <= semesters[s][1]);
+    }
+
+    /**
+     * Gets the first and last days of the semester
+     * @param semesterCode the semester code
+     * @returns {{firstDay: Date, lastDay: Date}|null} an object containing the dates
+     */
+    function getSemesterDates(semesterCode) {
+        const months = semesters[semesterCode];
+        if (!months) {
+            return null;
+        }
+
+        const year = parseInt($("#year").val()) || new Date().getFullYear();
+        const firstDay = new Date(year, months[0], 1);
+        const lastDay = new Date(year, months[1] + 1, 0);
+        return { firstDay, lastDay };
+    }
+
+    /**
+     * Resets the dates and date ranges of all date pickers.
+     */
+    function configDatesPickers() {
+        const semesterCode = $('#semester').val();
+        const semesterDates = getSemesterDates(semesterCode);
+        const pickers = ['#classes', '#labs', '#quizzes', '#holidays', '#exams'];
+        pickers.forEach(selector => {
+            const picker = $(selector);
+            picker.val("");
+            picker.datepicker("option", "minDate", semesterDates.firstDay);
+            picker.datepicker("option", "maxDate", semesterDates.lastDay);
+        });
+    }
+
+    /**
+     * Retrieves data from a specified HTML form and creates an object where each key-value
+     * pair corresponds to the name and value of the form's fields.
+     *
+     * @param {HTMLFormElement} form The HTML form element from which data is to be extracted (Must be a jQuery object).
+     * @returns {object} formData An object representing the form data.
+     */
+    function getFormData(form) {
+        const uArray = form.serializeArray();
+        const formData = {};
+
+        $.map(uArray, function(n, i) {
+            formData[n['name']] = n['value'];
+        });
+        return formData;
+    }
+
+    /**
+     * Invokes the server-side function to create the calendar slides.
+     */
+    function runCreateCalendar() {
+        this.disabled = true;
+        const form = $("#form_calendar");
+        const formData = getFormData(form);
+        console.log(formData);
+
+        $('#error').text('');
+        google.script.run
+            .withSuccessHandler((ok, element) => {
+                element.disabled = false;
+                if (!ok) {
+                    $('#error').empty()
+                        .append('Erreur dans la création du calendrier.');
+                }
+                return false;
+            })
+            .withFailureHandler((msg, element) => {
+                element.disabled = false;
+                $('#error').text(`Erreur : ${msg}`);
+                return false;
+            })
+            .withUserObject(this)
+            .createCalendar(formData);
+    }
+</script>
+</body>
+</html>

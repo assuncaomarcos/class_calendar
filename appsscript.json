@@ -1,0 +1,12 @@
+{
+  "timeZone": "America/Toronto",
+  "dependencies": {
+    "enabledAdvancedServices": [{
+      "userSymbol": "Slides",
+      "serviceId": "slides",
+      "version": "v1"
+    }]
+  },
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "DEPRECATED_ES5"
+}
