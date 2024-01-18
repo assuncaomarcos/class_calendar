@@ -1,4 +1,4 @@
-# Semester/Term Calendars Generator
+# Semester/Term Calendar Generator
 
 This is an Apps Script project designed and developed at ETS Montreal.
 
