@@ -26,6 +26,7 @@
 
 /**
  * Represents the default shape for calendar elements.
+ * https://developers.google.com/apps-script/reference/slides/shape-type
  */
 var CalendarElementsDefaultShape = "FLOW_CHART_TERMINATOR";
 
@@ -63,6 +64,8 @@ var LabelTextType = {
  * @property {string} SHAPE - The shape of the quiz.
  * @property {Object} BACKGROUND_FILL - The background fill of the quiz shape.
  * @property {Object} OUTLINE - The outline of the quiz shape.
+ *
+ * @see https://developers.google.com/slides/api/reference/rest/v1/presentations.pages/shapes?authuser=1#Page.ShapeProperties
  */
 var QuizShapeStyle = {
     SHAPE: "ELLIPSE",
@@ -93,6 +96,8 @@ var QuizShapeStyle = {
  * @property {object} BACKGROUND_FILL - The background fill properties.
  * @property {object} OUTLINE - The outline properties.
  * @property {string} CONTENT_ALIGNMENT - The content alignment for the shape. Possible values: "MIDDLE".
+ *
+ * @see https://developers.google.com/slides/api/reference/rest/v1/presentations.pages/shapes?authuser=1#Page.ShapeProperties
  */
 var MonthYearShapeStyle = {
     BACKGROUND_FILL: {
@@ -134,6 +139,8 @@ var MonthYearShapeStyle = {
  *
  * @property {Object} NORMAL - The default style for a normal day.
  * (Similar structure as the HOLIDAY style)
+ *
+ * @see https://developers.google.com/slides/api/reference/rest/v1/presentations.pages/shapes?authuser=1#Page.ShapeProperties
  */
 var DayShapeStyle= {
     HOLIDAY: {
